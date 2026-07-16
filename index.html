@@ -1,0 +1,1117 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#090d1b">
+  <meta name="description" content="Create beautiful modular multiplication patterns on a circle.">
+  <title>Circle Times Table</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #070a13;
+      --panel: rgba(16, 22, 42, .86);
+      --border: rgba(255, 255, 255, .11);
+      --border-strong: rgba(255, 255, 255, .18);
+      --text: #f7f8ff;
+      --muted: #aab2cc;
+      --accent: #8b7cff;
+      --accent-2: #55d6ff;
+      --radius: 25px;
+      --shadow: 0 24px 70px rgba(0, 0, 0, .34);
+    }
+
+    * { box-sizing: border-box; }
+    html { min-width: 320px; background: var(--bg); }
+    body {
+      min-height: 100vh;
+      margin: 0;
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at 10% 5%, rgba(102, 84, 255, .24), transparent 34rem),
+        radial-gradient(circle at 95% 20%, rgba(55, 206, 255, .13), transparent 30rem),
+        linear-gradient(160deg, #080b15, #090d1b 48%, #070911);
+    }
+
+    button, input { font: inherit; }
+    button { color: inherit; }
+    button:focus-visible, input:focus-visible {
+      outline: 3px solid rgba(85, 214, 255, .5);
+      outline-offset: 3px;
+    }
+
+    .page {
+      width: min(1440px, calc(100% - 40px));
+      margin: 0 auto;
+      padding: 42px 0 28px;
+    }
+
+    .hero {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 28px;
+      margin-bottom: 28px;
+    }
+
+    .eyebrow, .kicker {
+      margin: 0 0 9px;
+      color: var(--accent-2);
+      font-size: .75rem;
+      font-weight: 800;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2.4rem, 5vw, 5.4rem);
+      line-height: .98;
+      letter-spacing: -.055em;
+    }
+
+    .hero-copy {
+      max-width: 730px;
+      margin: 18px 0 0;
+      color: var(--muted);
+      font-size: clamp(1rem, 1.7vw, 1.18rem);
+      line-height: 1.65;
+    }
+
+    .hero-badge {
+      display: grid;
+      width: clamp(82px, 11vw, 132px);
+      aspect-ratio: 1;
+      flex: 0 0 auto;
+      place-items: center;
+      border: 1px solid var(--border-strong);
+      border-radius: 50%;
+      background:
+        radial-gradient(circle at 35% 30%, rgba(255,255,255,.18), transparent 32%),
+        linear-gradient(145deg, rgba(139,124,255,.72), rgba(85,214,255,.28));
+      box-shadow: 0 20px 50px rgba(81,67,199,.25), inset 0 0 30px rgba(255,255,255,.08);
+      font-size: clamp(2.6rem, 6vw, 5.2rem);
+      font-weight: 200;
+    }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: minmax(300px, 420px) minmax(0, 1fr);
+      gap: 24px;
+      align-items: start;
+    }
+
+    .panel {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: linear-gradient(145deg, rgba(20,27,51,.93), rgba(11,16,31,.86));
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+    }
+
+    .controls { padding: 24px; }
+    .art {
+      position: sticky;
+      top: 20px;
+      min-width: 0;
+      padding: 24px;
+    }
+
+    .heading, .art-toolbar, .control-top, .status, .switch-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 1.45rem;
+      letter-spacing: -.025em;
+    }
+
+    .random {
+      width: 42px;
+      height: 42px;
+      border: 1px solid var(--border-strong);
+      border-radius: 14px;
+      background: rgba(255,255,255,.055);
+      font-size: 1.35rem;
+      cursor: pointer;
+      transition: transform .16s ease, background .16s ease;
+    }
+    .random:hover { transform: rotate(20deg); background: rgba(255,255,255,.1); }
+
+    .control-group { margin-top: 25px; }
+    .control-top label { font-weight: 740; }
+    output {
+      min-width: 52px;
+      padding: 5px 10px;
+      border: 1px solid rgba(139,124,255,.35);
+      border-radius: 999px;
+      color: #dcd7ff;
+      background: rgba(139,124,255,.12);
+      font-weight: 800;
+      text-align: center;
+    }
+
+    .range-row {
+      display: grid;
+      grid-template-columns: 1fr 78px;
+      gap: 12px;
+      margin-top: 12px;
+      align-items: center;
+    }
+
+    .speed-row { margin-top: 12px; }
+    .speed-legend {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 9px;
+      color: var(--muted);
+      font-size: .72rem;
+      font-weight: 700;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      height: 6px;
+      appearance: none;
+      border-radius: 999px;
+      background: linear-gradient(90deg, rgba(139,124,255,.95), rgba(85,214,255,.92));
+      cursor: pointer;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      width: 20px;
+      height: 20px;
+      appearance: none;
+      border: 3px solid #f7f8ff;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 4px 16px rgba(0,0,0,.35);
+    }
+    input[type="range"]::-moz-range-thumb {
+      width: 15px;
+      height: 15px;
+      border: 3px solid #f7f8ff;
+      border-radius: 50%;
+      background: var(--accent);
+    }
+
+    .number {
+      width: 100%;
+      padding: 10px 9px;
+      border: 1px solid var(--border-strong);
+      border-radius: 12px;
+      color: var(--text);
+      background: rgba(0,0,0,.2);
+      font-weight: 760;
+      text-align: center;
+    }
+
+    .formula {
+      margin-top: 26px;
+      padding: 16px;
+      border: 1px solid rgba(85,214,255,.16);
+      border-radius: 18px;
+      background: rgba(5,9,20,.42);
+    }
+    .formula-title, .preset-title {
+      margin: 0 0 9px;
+      color: var(--muted);
+      font-size: .76rem;
+      font-weight: 800;
+      letter-spacing: .11em;
+      text-transform: uppercase;
+    }
+    .formula code {
+      display: block;
+      overflow-x: auto;
+      padding: 12px;
+      border-radius: 12px;
+      color: #dff7ff;
+      background: rgba(85,214,255,.075);
+      font-size: .82rem;
+      white-space: normal;
+      overflow-wrap: anywhere;
+    }
+    .formula p:last-child {
+      margin: 12px 0 0;
+      color: var(--muted);
+      font-size: .9rem;
+      line-height: 1.5;
+    }
+
+    .button-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    .button, .small-button, .preset button {
+      border: 1px solid var(--border-strong);
+      cursor: pointer;
+      transition: transform .15s ease, border-color .15s ease, background .15s ease;
+    }
+    .button {
+      min-height: 44px;
+      padding: 10px 13px;
+      border-radius: 14px;
+      font-weight: 780;
+      background: rgba(255,255,255,.07);
+    }
+    .button.primary {
+      border-color: transparent;
+      background: linear-gradient(135deg, var(--accent), #6a9eff);
+      box-shadow: 0 12px 24px rgba(88,79,205,.25);
+    }
+    .button.ghost { color: var(--muted); background: transparent; }
+    .button:hover:not(:disabled), .small-button:hover, .preset button:hover {
+      transform: translateY(-1px);
+      border-color: rgba(255,255,255,.28);
+    }
+    .button:disabled { cursor: not-allowed; opacity: .45; }
+
+    fieldset {
+      display: grid;
+      gap: 2px;
+      margin: 24px 0 0;
+      padding: 0;
+      border: 0;
+    }
+    legend {
+      margin-bottom: 8px;
+      color: var(--muted);
+      font-size: .76rem;
+      font-weight: 800;
+      letter-spacing: .11em;
+      text-transform: uppercase;
+    }
+    .switch-row {
+      min-height: 58px;
+      padding: 10px 2px;
+      border-bottom: 1px solid rgba(255,255,255,.07);
+      cursor: pointer;
+    }
+    .switch-row:last-child { border-bottom: 0; }
+    .switch-row span { display: grid; gap: 3px; }
+    .switch-row strong { font-size: .93rem; }
+    .switch-row small { color: var(--muted); font-size: .77rem; }
+    input[type="checkbox"] {
+      position: relative;
+      width: 42px;
+      height: 24px;
+      flex: 0 0 auto;
+      appearance: none;
+      border: 1px solid var(--border-strong);
+      border-radius: 999px;
+      background: rgba(0,0,0,.28);
+      cursor: pointer;
+    }
+    input[type="checkbox"]::after {
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #d9def0;
+      content: "";
+      transition: transform .18s ease;
+    }
+    input[type="checkbox"]:checked { background: var(--accent); }
+    input[type="checkbox"]:checked::after { transform: translateX(18px); background: white; }
+
+    .preset-wrap { margin-top: 22px; }
+    .preset {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .preset button {
+      display: grid;
+      grid-template-columns: 54px minmax(0, 1fr);
+      gap: 10px;
+      min-width: 0;
+      padding: 10px;
+      border-radius: 16px;
+      color: #d6dcf1;
+      background:
+        radial-gradient(circle at 12% 18%, hsla(var(--preset-hue, 255), 90%, 68%, .12), transparent 44%),
+        rgba(255,255,255,.04);
+      text-align: left;
+    }
+    .preset button:hover {
+      background:
+        radial-gradient(circle at 12% 18%, hsla(var(--preset-hue, 255), 90%, 68%, .2), transparent 48%),
+        rgba(255,255,255,.07);
+    }
+    .preset button.active {
+      border-color: rgba(85,214,255,.5);
+      background:
+        radial-gradient(circle at 12% 18%, hsla(var(--preset-hue, 255), 90%, 68%, .23), transparent 50%),
+        rgba(85,214,255,.075);
+      box-shadow: 0 0 0 2px rgba(85,214,255,.07), 0 12px 28px rgba(0,0,0,.24);
+    }
+    .preset-preview {
+      width: 54px;
+      height: 54px;
+      align-self: center;
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 50%;
+      background: rgba(3,6,14,.72);
+      box-shadow: inset 0 0 18px rgba(0,0,0,.45), 0 7px 20px hsla(var(--preset-hue, 255), 90%, 55%, .08);
+    }
+    .preset-copy { display: grid; align-content: center; gap: 3px; min-width: 0; }
+    .preset-copy strong {
+      overflow: hidden;
+      color: #f5f7ff;
+      font-size: .82rem;
+      line-height: 1.12;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .preset-copy small {
+      color: var(--muted);
+      font-size: .68rem;
+      line-height: 1.28;
+    }
+
+    .art-toolbar { margin-bottom: 18px; }
+    .pattern-name {
+      margin: 7px 0 0;
+      color: #99a5c4;
+      font-size: .82rem;
+      font-weight: 680;
+    }
+    .toolbar-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+    .small-button {
+      padding: 9px 12px;
+      border-radius: 12px;
+      color: #dce2f6;
+      background: rgba(255,255,255,.055);
+      font-size: .8rem;
+      font-weight: 740;
+    }
+
+    .canvas-frame {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 1;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 22px;
+      background: radial-gradient(circle at center, rgba(25,34,66,.68), rgba(8,12,25,.96) 68%, #060910);
+      box-shadow: inset 0 0 80px rgba(0,0,0,.3);
+    }
+    canvas { display: block; width: 100%; height: 100%; }
+    .shine {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: linear-gradient(135deg, rgba(255,255,255,.045), transparent 35%, transparent 70%, rgba(85,214,255,.025));
+    }
+
+    .status {
+      min-height: 48px;
+      padding-top: 14px;
+      color: var(--muted);
+      font-size: .86rem;
+    }
+    #progress { flex: 0 0 auto; color: #d9def0; font-weight: 760; }
+    footer {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 10px 14px;
+      padding: 26px 6px 0;
+      color: #737d9d;
+      font-size: .84rem;
+      text-align: center;
+    }
+    .visitor-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      min-height: 30px;
+      padding: 5px 10px;
+      border: 1px solid rgba(85,214,255,.16);
+      border-radius: 999px;
+      color: #aebad9;
+      background: rgba(85,214,255,.055);
+    }
+    .visitor-star {
+      color: var(--accent-2);
+      filter: drop-shadow(0 0 7px rgba(85,214,255,.55));
+    }
+
+    /* A square based only on column width can be taller than a laptop screen.
+       On desktop, use whichever is smaller: the column or the usable viewport height. */
+    @media (min-width: 981px) {
+      .canvas-frame {
+        width: min(100%, var(--canvas-fit, max(280px, calc(100vh - 360px))));
+        width: min(100%, var(--canvas-fit, max(280px, calc(100dvh - 360px))));
+        margin-inline: auto;
+      }
+    }
+
+    @media (max-width: 980px) {
+      .workspace { grid-template-columns: 1fr; }
+      .art { position: static; grid-row: 1; }
+      .canvas-frame { width: 100%; }
+    }
+    @media (max-width: 640px) {
+      .page { width: min(100% - 22px, 1440px); padding-top: 24px; }
+      .hero { align-items: flex-start; }
+      .hero-badge { width: 68px; }
+      .panel, .canvas-frame { border-radius: 20px; }
+      .controls, .art { padding: 17px; }
+      .art-toolbar { align-items: flex-start; flex-direction: column; }
+      .toolbar-actions { width: 100%; justify-content: stretch; }
+      .small-button { flex: 1; }
+      .status { align-items: flex-start; flex-direction: column; gap: 6px; }
+      .button-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 430px) {
+      .preset { grid-template-columns: 1fr; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">A modular multiplication playground</p>
+        <h1>Circle Times Table</h1>
+        <p class="hero-copy">Place equally spaced points around a circle, multiply each point, and watch arithmetic turn into art.</p>
+      </div>
+      <div class="hero-badge" aria-hidden="true">×</div>
+    </header>
+
+    <main class="workspace">
+      <section class="panel controls" aria-labelledby="controls-title">
+        <div class="heading">
+          <div><p class="kicker">Build a pattern</p><h2 id="controls-title">Controls</h2></div>
+          <button class="random" id="random" type="button" title="Choose a random pattern" aria-label="Choose a random pattern">↻</button>
+        </div>
+
+        <div class="control-group">
+          <div class="control-top"><label for="points-range">Number of points</label><output id="points-out">120</output></div>
+          <div class="range-row">
+            <input id="points-range" type="range" min="2" max="500" value="120">
+            <input id="points-number" class="number" type="number" min="2" max="500" value="120" inputmode="numeric" aria-label="Number of points">
+          </div>
+        </div>
+
+        <div class="control-group">
+          <div class="control-top"><label for="multiplier-range">Times table / multiplier</label><output id="multiplier-out">2</output></div>
+          <div class="range-row">
+            <input id="multiplier-range" type="range" min="1" max="500" value="2">
+            <input id="multiplier-number" class="number" type="number" min="1" max="500" value="2" inputmode="numeric" aria-label="Multiplier">
+          </div>
+        </div>
+
+        <div class="control-group">
+          <div class="control-top"><label for="speed-range">Animation pace</label><output id="speed-out">Dreamy</output></div>
+          <div class="speed-row">
+            <input id="speed-range" type="range" min="1" max="5" value="2" step="1" aria-label="Animation pace">
+            <div class="speed-legend" aria-hidden="true"><span>Cinematic</span><span>Warp</span></div>
+          </div>
+        </div>
+
+        <div class="formula">
+          <p class="formula-title">How wrapping works</p>
+          <code>target = ((point × multiplier − 1) mod points) + 1</code>
+          <p id="example"></p>
+        </div>
+
+        <div class="button-grid">
+          <button id="animate" class="button primary" type="button">Animate</button>
+          <button id="pause" class="button" type="button" disabled>Pause</button>
+          <button id="draw" class="button" type="button">Draw instantly</button>
+          <button id="clear" class="button ghost" type="button">Clear</button>
+        </div>
+
+        <fieldset>
+          <legend>Display</legend>
+          <label class="switch-row"><span><strong>Point markers</strong><small>Show every position on the circle</small></span><input id="markers" type="checkbox" checked></label>
+          <label class="switch-row"><span><strong>Number labels</strong><small>Automatically hidden above 80 points</small></span><input id="labels" type="checkbox" checked></label>
+          <label class="switch-row"><span><strong>Rainbow lines</strong><small>Give every connection its own hue</small></span><input id="rainbow" type="checkbox"></label>
+        </fieldset>
+
+        <div class="preset-wrap">
+          <p class="preset-title">Try a pattern</p>
+          <div class="preset" id="presets">
+            <button type="button" data-points="349" data-multiplier="350" data-rainbow="1" data-markers="0" data-labels="0" data-hue="48" style="--preset-hue:48">
+              <canvas class="preset-preview" aria-hidden="true"></canvas>
+              <span class="preset-copy"><strong>Event Horizon</strong><small>349 × 350 · every line folds into itself</small></span>
+            </button>
+            <button type="button" data-points="240" data-multiplier="2" data-rainbow="0" data-markers="0" data-labels="0" data-hue="264" style="--preset-hue:264">
+              <canvas class="preset-preview" aria-hidden="true"></canvas>
+              <span class="preset-copy"><strong>Velvet Heart</strong><small>240 × 2 · a glowing cardioid</small></span>
+            </button>
+            <button type="button" data-points="300" data-multiplier="4" data-rainbow="1" data-markers="0" data-labels="0" data-hue="184" style="--preset-hue:184">
+              <canvas class="preset-preview" aria-hidden="true"></canvas>
+              <span class="preset-copy"><strong>Trinity Bloom</strong><small>300 × 4 · three luminous petals</small></span>
+            </button>
+            <button type="button" data-points="320" data-multiplier="5" data-rainbow="0" data-markers="0" data-labels="0" data-hue="328" style="--preset-hue:328">
+              <canvas class="preset-preview" aria-hidden="true"></canvas>
+              <span class="preset-copy"><strong>Moon Clover</strong><small>320 × 5 · four soft chambers</small></span>
+            </button>
+            <button type="button" data-points="360" data-multiplier="7" data-rainbow="1" data-markers="0" data-labels="0" data-hue="28" style="--preset-hue:28">
+              <canvas class="preset-preview" aria-hidden="true"></canvas>
+              <span class="preset-copy"><strong>Solar Rosette</strong><small>360 × 7 · a six-petal flare</small></span>
+            </button>
+            <button type="button" data-points="360" data-multiplier="51" data-rainbow="1" data-markers="0" data-labels="0" data-hue="218" style="--preset-hue:218">
+              <canvas class="preset-preview" aria-hidden="true"></canvas>
+              <span class="preset-copy"><strong>Quantum Lace</strong><small>360 × 51 · a woven orbital web</small></span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel art" aria-labelledby="art-title">
+        <div class="art-toolbar">
+          <div><p class="kicker">Live result</p><h2 id="art-title"><span id="art-points">120</span> points × <span id="art-multiplier">2</span></h2><p class="pattern-name" id="pattern-name">Custom constellation</p></div>
+          <div class="toolbar-actions">
+            <button id="copy" class="small-button" type="button">Copy pattern link</button>
+            <button id="save" class="small-button" type="button">Save PNG</button>
+          </div>
+        </div>
+        <div class="canvas-frame">
+          <canvas id="canvas" role="img" aria-label="Circular multiplication pattern"></canvas>
+          <div class="shine" aria-hidden="true"></div>
+        </div>
+        <div class="status" aria-live="polite"><span id="status">Ready — press Animate to draw from point 1.</span><span id="progress">120 connections</span></div>
+      </section>
+    </main>
+
+    <footer>
+      <span>Built with plain HTML, CSS, JavaScript, and a little modular arithmetic.</span>
+      <span class="visitor-pill" title="An approximate count of browsers that have opened the published site">
+        <span class="visitor-star" aria-hidden="true">✦</span>
+        <span id="visitor-text">Visitor counter starts after publishing</span>
+      </span>
+    </footer>
+  </div>
+
+  <script>
+    "use strict";
+
+    const limits = { points: [2, 500], multiplier: [1, 500] };
+    const speedModes = {
+      1: { label: "Cinematic", duration: 16000 },
+      2: { label: "Dreamy", duration: 10000 },
+      3: { label: "Balanced", duration: 6500 },
+      4: { label: "Brisk", duration: 3800 },
+      5: { label: "Warp", duration: 1800 }
+    };
+    const state = {
+      points: 120,
+      multiplier: 2,
+      speed: 2,
+      markers: true,
+      labels: true,
+      rainbow: false,
+      visible: 120,
+      animationId: 0,
+      animating: false,
+      paused: false,
+      size: 0
+    };
+
+    const $ = (selector) => document.querySelector(selector);
+    const el = {
+      canvas: $("#canvas"), canvasFrame: $(".canvas-frame"), statusBar: $(".status"),
+      pointsRange: $("#points-range"), pointsNumber: $("#points-number"), pointsOut: $("#points-out"),
+      multiplierRange: $("#multiplier-range"), multiplierNumber: $("#multiplier-number"), multiplierOut: $("#multiplier-out"),
+      speedRange: $("#speed-range"), speedOut: $("#speed-out"),
+      example: $("#example"), animate: $("#animate"), pause: $("#pause"), draw: $("#draw"), clear: $("#clear"),
+      markers: $("#markers"), labels: $("#labels"), rainbow: $("#rainbow"), presets: $("#presets"), random: $("#random"),
+      artPoints: $("#art-points"), artMultiplier: $("#art-multiplier"), patternName: $("#pattern-name"), status: $("#status"), progress: $("#progress"),
+      copy: $("#copy"), save: $("#save"), visitorText: $("#visitor-text")
+    };
+
+    const ctx = el.canvas.getContext("2d");
+    const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
+
+    function integer(value, min, max, fallback) {
+      const number = Number.parseInt(value, 10);
+      return Number.isFinite(number) ? Math.min(max, Math.max(min, number)) : fallback;
+    }
+
+    function target(point, multiplier = state.multiplier, total = state.points) {
+      return ((point * multiplier - 1) % total) + 1;
+    }
+
+    function description(point) {
+      const product = point * state.multiplier;
+      const destination = target(point);
+      if (point === destination) return `Point ${point}: ${point} × ${state.multiplier} returns to itself.`;
+      return product === destination
+        ? `Point ${point}: ${point} × ${state.multiplier} = ${product} → point ${destination}`
+        : `Point ${point}: ${point} × ${state.multiplier} = ${product} → wraps to point ${destination}`;
+    }
+
+    function identityPattern() {
+      return (state.multiplier - 1) % state.points === 0;
+    }
+
+    function currentPreset() {
+      return [...el.presets.querySelectorAll("button[data-points]")]
+        .find(button => Number(button.dataset.points) === state.points && Number(button.dataset.multiplier) === state.multiplier);
+    }
+
+    function loadUrl() {
+      const query = new URLSearchParams(location.search);
+      state.points = integer(query.get("points"), ...limits.points, state.points);
+      state.multiplier = integer(query.get("multiplier"), ...limits.multiplier, state.multiplier);
+      state.speed = integer(query.get("speed"), 1, 5, state.speed);
+      if (query.has("labels")) state.labels = query.get("labels") !== "0";
+      if (query.has("markers")) state.markers = query.get("markers") !== "0";
+      if (query.has("rainbow")) state.rainbow = query.get("rainbow") === "1";
+    }
+
+    function updateUrl() {
+      if (!/^https?:$/.test(location.protocol)) return;
+      const url = new URL(location.href);
+      url.searchParams.set("points", state.points);
+      url.searchParams.set("multiplier", state.multiplier);
+      url.searchParams.set("speed", state.speed);
+      url.searchParams.set("labels", state.labels ? "1" : "0");
+      url.searchParams.set("markers", state.markers ? "1" : "0");
+      url.searchParams.set("rainbow", state.rainbow ? "1" : "0");
+      history.replaceState(null, "", url);
+    }
+
+    function sync() {
+      el.pointsRange.value = el.pointsNumber.value = el.pointsOut.textContent = state.points;
+      el.multiplierRange.value = el.multiplierNumber.value = el.multiplierOut.textContent = state.multiplier;
+      el.speedRange.value = state.speed;
+      el.speedOut.textContent = speedModes[state.speed].label;
+      el.markers.checked = state.markers;
+      el.labels.checked = state.labels;
+      el.rainbow.checked = state.rainbow;
+      el.artPoints.textContent = state.points;
+      el.artMultiplier.textContent = state.multiplier;
+      const preset = currentPreset();
+      el.patternName.textContent = preset?.querySelector("strong")?.textContent || "Custom constellation";
+      el.presets.querySelectorAll("button[data-points]").forEach(button => {
+        const active = button === preset;
+        button.classList.toggle("active", active);
+        button.setAttribute("aria-pressed", String(active));
+      });
+      el.example.textContent = description(Math.min(5, state.points));
+    }
+
+    function coordinates(index, total, center, radius) {
+      const angle = Math.PI / 2 + ((index - 1) * Math.PI * 2) / total;
+      return { x: center + Math.cos(angle) * radius, y: center + Math.sin(angle) * radius };
+    }
+
+    function lineColor(index, total) {
+      if (state.rainbow) {
+        const hue = (((index - 1) / total) * 330 + 185) % 360;
+        const alpha = total > 260 ? .28 : total > 120 ? .38 : .58;
+        return `hsla(${hue}, 86%, 67%, ${alpha})`;
+      }
+      const alpha = total > 300 ? .19 : total > 180 ? .25 : total > 80 ? .34 : .55;
+      return `rgba(151, 137, 255, ${alpha})`;
+    }
+
+    function paint(context, width, height, connectionCount, exportMode = false) {
+      const total = state.points;
+      const center = width / 2;
+      const shortest = Math.min(width, height);
+      const labelSpace = state.labels && total <= 80 ? shortest * .09 : shortest * .045;
+      const radius = Math.max(20, shortest / 2 - labelSpace);
+
+      context.clearRect(0, 0, width, height);
+      if (exportMode) {
+        const bg = context.createRadialGradient(center, center, shortest * .04, center, center, shortest * .72);
+        bg.addColorStop(0, "#182244"); bg.addColorStop(.72, "#090e1e"); bg.addColorStop(1, "#050810");
+        context.fillStyle = bg; context.fillRect(0, 0, width, height);
+      }
+
+      context.save();
+      context.lineCap = "round";
+      context.globalCompositeOperation = "lighter";
+      context.lineWidth = Math.max(.55, Math.min(1.65, 80 / total)) * (exportMode ? width / 1000 : 1);
+
+      for (let point = 1; point <= Math.min(connectionCount, total); point += 1) {
+        const destination = target(point);
+        const from = coordinates(point, total, center, radius);
+        const to = coordinates(destination, total, center, radius);
+        if (point === destination) {
+          context.beginPath();
+          context.arc(from.x, from.y, Math.max(1.3, shortest * .0035), 0, Math.PI * 2);
+          context.fillStyle = lineColor(point, total);
+          context.fill();
+        } else {
+          context.beginPath(); context.moveTo(from.x, from.y); context.lineTo(to.x, to.y);
+          context.strokeStyle = lineColor(point, total); context.stroke();
+        }
+      }
+      context.restore();
+
+      if (!exportMode && state.animating && connectionCount > 0 && connectionCount <= total) {
+        const activePoint = Math.min(connectionCount, total);
+        const destination = target(activePoint);
+        const from = coordinates(activePoint, total, center, radius);
+        const to = coordinates(destination, total, center, radius);
+        context.save();
+        context.globalCompositeOperation = "lighter";
+        context.shadowBlur = Math.max(10, shortest * .022);
+        context.shadowColor = state.rainbow ? lineColor(activePoint, total) : "rgba(85,214,255,.95)";
+        context.strokeStyle = state.rainbow ? lineColor(activePoint, total) : "rgba(140,230,255,.95)";
+        context.lineWidth = Math.max(1.5, shortest * .0042);
+        if (activePoint !== destination) {
+          context.beginPath(); context.moveTo(from.x, from.y); context.lineTo(to.x, to.y); context.stroke();
+        }
+        context.fillStyle = "rgba(245,252,255,.98)";
+        context.beginPath(); context.arc(to.x, to.y, Math.max(2.3, shortest * .006), 0, Math.PI * 2); context.fill();
+        context.restore();
+      }
+
+      context.beginPath();
+      context.arc(center, center, radius, 0, Math.PI * 2);
+      context.strokeStyle = "rgba(225, 231, 255, .62)";
+      context.lineWidth = Math.max(1, shortest * .0022);
+      context.stroke();
+
+      if (state.markers) {
+        const dot = Math.max(1.2, Math.min(3.3, shortest * .007 - total * .008));
+        context.fillStyle = total > 160 ? "rgba(232,236,255,.62)" : "rgba(245,247,255,.9)";
+        for (let point = 1; point <= total; point += 1) {
+          const p = coordinates(point, total, center, radius);
+          context.beginPath(); context.arc(p.x, p.y, dot, 0, Math.PI * 2); context.fill();
+        }
+      }
+
+      if (state.labels && total <= 80) {
+        const fontSize = Math.max(9, Math.min(15, shortest * .025));
+        const labelRadius = radius + fontSize * 1.45;
+        context.fillStyle = "rgba(229,233,250,.86)";
+        context.font = `650 ${fontSize}px ui-sans-serif, system-ui, sans-serif`;
+        context.textAlign = "center"; context.textBaseline = "middle";
+        for (let point = 1; point <= total; point += 1) {
+          const p = coordinates(point, total, center, labelRadius);
+          context.fillText(point, p.x, p.y);
+        }
+      }
+    }
+
+    function render() { if (state.size) paint(ctx, state.size, state.size, state.visible); }
+
+    function fitCanvasFrame() {
+      if (!matchMedia("(min-width: 981px)").matches) {
+        el.canvasFrame.style.removeProperty("--canvas-fit");
+        return;
+      }
+
+      // The art panel becomes sticky as the page is scrolled. Recalculate from
+      // its live on-screen position so the drawing grows into the newly
+      // available space instead of staying at its smaller, page-load size.
+      const viewportHeight = Math.floor(window.visualViewport?.height || innerHeight);
+      const top = Math.max(0, el.canvasFrame.getBoundingClientRect().top);
+      const statusHeight = el.statusBar.getBoundingClientRect().height;
+      const artStyle = getComputedStyle(el.canvasFrame.closest(".art"));
+      const bottomPadding = Number.parseFloat(artStyle.paddingBottom) || 24;
+      const available = Math.floor(viewportHeight - top - statusHeight - bottomPadding - 10);
+      const nextSize = Math.max(280, available);
+
+      if (el.canvasFrame.style.getPropertyValue("--canvas-fit") !== `${nextSize}px`) {
+        el.canvasFrame.style.setProperty("--canvas-fit", `${nextSize}px`);
+      }
+    }
+
+    function resize() {
+      const rect = el.canvas.getBoundingClientRect();
+      const size = Math.max(1, Math.floor(Math.min(rect.width, rect.height)));
+      const dpr = Math.min(devicePixelRatio || 1, 2.5);
+      state.size = size;
+      el.canvas.width = Math.round(size * dpr);
+      el.canvas.height = Math.round(size * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      render();
+    }
+
+    function stop(clear = false) {
+      state.animationId += 1;
+      state.animating = state.paused = false;
+      el.animate.disabled = false;
+      el.pause.disabled = true;
+      el.pause.textContent = "Pause";
+      if (clear) { state.visible = 0; render(); }
+    }
+
+    function readyMessage() {
+      el.status.textContent = identityPattern()
+        ? "Every point returns to itself — the center stays perfectly empty."
+        : `Ready — ${state.points} points using the table of ${state.multiplier}.`;
+      el.progress.textContent = `${state.points} connections`;
+    }
+
+    function setValue(kind, raw) {
+      state[kind] = integer(raw, ...limits[kind], state[kind]);
+      stop();
+      state.visible = state.points;
+      sync(); updateUrl(); render(); readyMessage();
+    }
+
+    function setSpeed(raw) {
+      state.speed = integer(raw, 1, 5, state.speed);
+      el.speedRange.value = state.speed;
+      el.speedOut.textContent = speedModes[state.speed].label;
+      updateUrl();
+    }
+
+    function setPattern(points, multiplier, animateAfter = false) {
+      stop();
+      state.points = integer(points, ...limits.points, state.points);
+      state.multiplier = integer(multiplier, ...limits.multiplier, state.multiplier);
+      state.visible = state.points;
+      sync(); updateUrl(); render(); readyMessage();
+      if (animateAfter) animatePattern();
+    }
+
+    const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+    async function animatePattern() {
+      stop();
+      if (reducedMotion.matches) {
+        state.visible = state.points; render();
+        el.status.textContent = "Your device requests reduced motion, so the complete pattern is shown.";
+        return;
+      }
+      const runId = state.animationId;
+      state.animating = true;
+      state.visible = 0;
+      el.animate.disabled = true;
+      el.pause.disabled = false;
+      render();
+      el.status.textContent = "Starting at point 1…";
+      el.progress.textContent = `0 / ${state.points}`;
+      for (let point = 1; point <= state.points; point += 1) {
+        if (runId !== state.animationId) return;
+        while (state.paused && runId === state.animationId) await sleep(45);
+        if (runId !== state.animationId) return;
+        state.visible = point; render();
+        el.status.textContent = description(point);
+        el.progress.textContent = `${point} / ${state.points}`;
+        const delay = Math.max(8, Math.min(420, speedModes[state.speed].duration / state.points));
+        await sleep(delay);
+      }
+      if (runId !== state.animationId) return;
+      state.animating = false;
+      el.animate.disabled = false;
+      el.pause.disabled = true;
+      el.status.textContent = identityPattern()
+        ? "Complete — a glowing orbit with no chords crossing the center."
+        : `Complete — table of ${state.multiplier} across ${state.points} points.`;
+      el.progress.textContent = `${state.points} connections`;
+    }
+
+    function pauseAnimation() {
+      if (!state.animating) return;
+      state.paused = !state.paused;
+      el.pause.textContent = state.paused ? "Resume" : "Pause";
+      el.status.textContent = state.paused ? `Paused after ${state.visible} connections.` : description(Math.max(1, state.visible));
+    }
+
+    function randomPattern() {
+      const curated = [
+        [90, 2], [120, 3], [180, 7], [220, 11], [240, 51], [300, 77], [349, 350], [360, 101]
+      ];
+      const [points, multiplier] = curated[Math.floor(Math.random() * curated.length)];
+      state.rainbow = Math.random() > .48;
+      state.markers = false;
+      state.labels = false;
+      setPattern(points, multiplier, true);
+    }
+
+    function drawPresetPreviews() {
+      const buttons = el.presets.querySelectorAll("button[data-points]");
+      buttons.forEach(button => {
+        const canvas = button.querySelector("canvas");
+        if (!canvas) return;
+        const size = 108;
+        const dpr = Math.min(devicePixelRatio || 1, 2);
+        canvas.width = Math.round(size * dpr);
+        canvas.height = Math.round(size * dpr);
+        const preview = canvas.getContext("2d");
+        preview.setTransform(dpr, 0, 0, dpr, 0, 0);
+        preview.clearRect(0, 0, size, size);
+
+        const total = integer(button.dataset.points, 2, 500, 120);
+        const multiplier = integer(button.dataset.multiplier, 1, 500, 2);
+        const hue = integer(button.dataset.hue, 0, 360, 255);
+        const center = size / 2;
+        const radius = size * .43;
+        const rainbow = button.dataset.rainbow === "1";
+        preview.save();
+        preview.globalCompositeOperation = "lighter";
+        preview.lineCap = "round";
+        preview.lineWidth = total > 300 ? .36 : .48;
+        for (let point = 1; point <= total; point += 1) {
+          const destination = ((point * multiplier - 1) % total) + 1;
+          const from = coordinates(point, total, center, radius);
+          const to = coordinates(destination, total, center, radius);
+          const colorHue = rainbow ? (((point - 1) / total) * 320 + hue) % 360 : hue;
+          preview.strokeStyle = `hsla(${colorHue}, 86%, 68%, ${total > 320 ? .24 : .34})`;
+          preview.fillStyle = `hsla(${colorHue}, 90%, 72%, .72)`;
+          if (point === destination) {
+            preview.beginPath(); preview.arc(from.x, from.y, .72, 0, Math.PI * 2); preview.fill();
+          } else {
+            preview.beginPath(); preview.moveTo(from.x, from.y); preview.lineTo(to.x, to.y); preview.stroke();
+          }
+        }
+        preview.restore();
+        preview.beginPath(); preview.arc(center, center, radius, 0, Math.PI * 2);
+        preview.strokeStyle = "rgba(231,237,255,.55)"; preview.lineWidth = .8; preview.stroke();
+      });
+    }
+
+    async function initVisitorCounter() {
+      const localPreview = !/^https?:$/.test(location.protocol) || location.hostname === "localhost" || location.hostname === "127.0.0.1";
+      if (localPreview) {
+        el.visitorText.textContent = "Visitor counter starts after publishing";
+        return;
+      }
+
+      try {
+        if (typeof window.Counter !== "function") {
+          await new Promise((resolve, reject) => {
+            const script = document.createElement("script");
+            script.src = "https://cdn.jsdelivr.net/npm/counterapi@2.1.2/dist/counter.browser.min.js";
+            script.onload = resolve;
+            script.onerror = reject;
+            document.head.append(script);
+          });
+        }
+
+        const counter = new window.Counter({
+          version: "v1",
+          namespace: "circle-times-table-a7f3d9c2e8b1",
+          timeout: 8000
+        });
+        const storageKey = "circle-times-table-visitor-counted-v1";
+        let counted = false;
+        try { counted = localStorage.getItem(storageKey) === "1"; } catch {}
+
+        let result;
+        try {
+          result = counted ? await counter.get("curious-visitors") : await counter.up("curious-visitors");
+        } catch (error) {
+          if (counted && error && error.status === 404) {
+            result = await counter.up("curious-visitors");
+            counted = false;
+          } else {
+            throw error;
+          }
+        }
+        if (!counted) {
+          try { localStorage.setItem(storageKey, "1"); } catch {}
+        }
+        const value = Number(result && result.value);
+        el.visitorText.textContent = Number.isFinite(value)
+          ? `${value.toLocaleString()} curious visitor${value === 1 ? "" : "s"}`
+          : "Visitor counter online";
+      } catch (error) {
+        console.warn("Visitor counter unavailable:", error);
+        el.visitorText.textContent = "Visitor counter temporarily unavailable";
+      }
+    }
+
+    async function copyLink() {
+      updateUrl();
+      if (!/^https?:$/.test(location.protocol)) {
+        el.copy.textContent = "Publish first";
+        setTimeout(() => el.copy.textContent = "Copy pattern link", 1500);
+        return;
+      }
+      let copied = false;
+      try { await navigator.clipboard.writeText(location.href); copied = true; } catch {}
+      if (!copied) {
+        const box = document.createElement("textarea");
+        box.value = location.href; box.readOnly = true; box.style.position = "fixed"; box.style.opacity = "0";
+        document.body.append(box); box.select(); copied = document.execCommand("copy"); box.remove();
+      }
+      el.copy.textContent = copied ? "Copied!" : "Copy failed";
+      setTimeout(() => el.copy.textContent = "Copy pattern link", 1500);
+    }
+
+    function savePng() {
+      const exportCanvas = document.createElement("canvas");
+      exportCanvas.width = exportCanvas.height = 1800;
+      paint(exportCanvas.getContext("2d"), 1800, 1800, state.points, true);
+      const link = document.createElement("a");
+      link.download = `circle-times-table-${state.points}x${state.multiplier}.png`;
+      link.href = exportCanvas.toDataURL("image/png");
+      link.click();
+    }
+
+    function bind() {
+      el.pointsRange.addEventListener("input", e => setValue("points", e.target.value));
+      el.pointsNumber.addEventListener("change", e => setValue("points", e.target.value));
+      el.multiplierRange.addEventListener("input", e => setValue("multiplier", e.target.value));
+      el.multiplierNumber.addEventListener("change", e => setValue("multiplier", e.target.value));
+      el.speedRange.addEventListener("input", e => setSpeed(e.target.value));
+      el.animate.addEventListener("click", animatePattern);
+      el.pause.addEventListener("click", pauseAnimation);
+      el.draw.addEventListener("click", () => {
+        stop(); state.visible = state.points; render();
+        el.status.textContent = identityPattern()
+          ? "Complete — a glowing orbit with no chords crossing the center."
+          : `Complete — table of ${state.multiplier} across ${state.points} points.`;
+        el.progress.textContent = `${state.points} connections`;
+      });
+      el.clear.addEventListener("click", () => { stop(true); el.status.textContent = "The circle is clear — press Animate when you are ready."; el.progress.textContent = `0 / ${state.points}`; });
+      el.random.addEventListener("click", randomPattern);
+      el.markers.addEventListener("change", e => { state.markers = e.target.checked; updateUrl(); render(); });
+      el.labels.addEventListener("change", e => { state.labels = e.target.checked; updateUrl(); render(); });
+      el.rainbow.addEventListener("change", e => { state.rainbow = e.target.checked; updateUrl(); render(); });
+      el.presets.addEventListener("click", e => {
+        const button = e.target.closest("button[data-points]");
+        if (!button) return;
+        state.rainbow = button.dataset.rainbow === "1";
+        state.markers = button.dataset.markers === "1";
+        state.labels = button.dataset.labels === "1";
+        setPattern(button.dataset.points, button.dataset.multiplier, true);
+      });
+      el.copy.addEventListener("click", copyLink);
+      el.save.addEventListener("click", savePng);
+      new ResizeObserver(resize).observe(el.canvas);
+
+      let fitRequest = 0;
+      const refit = () => {
+        if (fitRequest) return;
+        fitRequest = requestAnimationFrame(() => {
+          fitRequest = 0;
+          fitCanvasFrame();
+          requestAnimationFrame(resize);
+        });
+      };
+
+      addEventListener("resize", refit);
+      addEventListener("orientationchange", refit);
+      addEventListener("scroll", refit, { passive: true });
+      window.visualViewport?.addEventListener("resize", refit);
+      window.visualViewport?.addEventListener("scroll", refit);
+    }
+
+    loadUrl();
+    state.visible = state.points;
+    sync(); updateUrl(); bind(); fitCanvasFrame(); resize(); readyMessage();
+    drawPresetPreviews();
+    initVisitorCounter();
+  </script>
+</body>
+</html>
