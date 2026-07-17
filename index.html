@@ -448,6 +448,13 @@
       color: var(--accent-2);
       filter: drop-shadow(0 0 7px rgba(85,214,255,.55));
     }
+    .visitor-badge {
+      display: block;
+      width: auto;
+      height: 20px;
+      border: 0;
+      border-radius: 999px;
+    }
 
     /* A square based only on column width can be taller than a laptop screen.
        On desktop, use whichever is smaller: the column or the usable viewport height. */
@@ -595,9 +602,9 @@
 
     <footer>
       <span>Built with plain HTML, CSS, JavaScript, and a little modular arithmetic.</span>
-      <span class="visitor-pill" title="An approximate count of browsers that have opened the published site">
+      <span class="visitor-pill" title="A privacy-friendly page-view count for the published site">
         <span class="visitor-star" aria-hidden="true">✦</span>
-        <span id="visitor-text">Visitor counter starts after publishing</span>
+        <span id="visitor-text">Visit counter appears on the published site</span>
       </span>
     </footer>
   </div>
@@ -979,55 +986,27 @@
       });
     }
 
-    async function initVisitorCounter() {
-      const localPreview = !/^https?:$/.test(location.protocol) || location.hostname === "localhost" || location.hostname === "127.0.0.1";
-      if (localPreview) {
-        el.visitorText.textContent = "Visitor counter starts after publishing";
+    function initVisitorCounter() {
+      const publishedSite = location.hostname === "trttanjim.github.io"
+        && location.pathname.startsWith("/circle-times-table");
+
+      if (!publishedSite) {
+        el.visitorText.textContent = "Visit counter appears on the published site";
         return;
       }
 
-      try {
-        if (typeof window.Counter !== "function") {
-          await new Promise((resolve, reject) => {
-            const script = document.createElement("script");
-            script.src = "https://cdn.jsdelivr.net/npm/counterapi@2.1.2/dist/counter.browser.min.js";
-            script.onload = resolve;
-            script.onerror = reject;
-            document.head.append(script);
-          });
-        }
-
-        const counter = new window.Counter({
-          version: "v1",
-          namespace: "circle-times-table-a7f3d9c2e8b1",
-          timeout: 8000
-        });
-        const storageKey = "circle-times-table-visitor-counted-v1";
-        let counted = false;
-        try { counted = localStorage.getItem(storageKey) === "1"; } catch {}
-
-        let result;
-        try {
-          result = counted ? await counter.get("curious-visitors") : await counter.up("curious-visitors");
-        } catch (error) {
-          if (counted && error && error.status === 404) {
-            result = await counter.up("curious-visitors");
-            counted = false;
-          } else {
-            throw error;
-          }
-        }
-        if (!counted) {
-          try { localStorage.setItem(storageKey, "1"); } catch {}
-        }
-        const value = Number(result && result.value);
-        el.visitorText.textContent = Number.isFinite(value)
-          ? `${value.toLocaleString()} curious visitor${value === 1 ? "" : "s"}`
-          : "Visitor counter online";
-      } catch (error) {
-        console.warn("Visitor counter unavailable:", error);
-        el.visitorText.textContent = "Visitor counter temporarily unavailable";
-      }
+      // An image counter avoids cross-origin JavaScript and CORS failures on GitHub Pages.
+      // It records page loads rather than claiming to identify unique people.
+      const badge = new Image();
+      badge.className = "visitor-badge";
+      badge.alt = "Total site visits";
+      badge.decoding = "async";
+      badge.referrerPolicy = "no-referrer";
+      badge.src = "https://hits.sh/trttanjim.github.io/circle-times-table.svg?style=flat&label=site%20visits&labelColor=18213c&color=7868ff";
+      badge.onload = () => el.visitorText.replaceChildren(badge);
+      badge.onerror = () => {
+        el.visitorText.textContent = "Visit counter unavailable";
+      };
     }
 
     async function copyLink() {
